@@ -12,7 +12,7 @@ def main():
     rospy.init_node('imu', anonymous=False)
 
     # get imu config
-    imu_manager = imu.IMU(rospy.get_param('/ema_tao/imu'))
+    imu_manager = imu.IMU(rospy.get_param('/fes_channel_classifier/imu'))
 
     # list published topics
     pub = {}
@@ -36,7 +36,7 @@ def main():
                 imuMsg.header.stamp = timestamp
                 imuMsg.header.frame_id = frame_id
                 buttons = Int8()
-                
+
                 for name in imu_manager.imus:
                     orientation = imu_manager.getQuaternion(name)
 
@@ -58,9 +58,9 @@ def main():
                     imuMsg.linear_acceleration.z = -linear_acceleration[2]
 
                     pub[name].publish(imuMsg)
-                    
+
                     buttons = imu_manager.getButtonState(name)
-                    
+
                     pub[name + '_buttons'].publish(buttons)
             else:
                 if imu_manager.broadcast == False:
@@ -70,38 +70,38 @@ def main():
                         imuMsg.header.stamp = timestamp
                         imuMsg.header.frame_id = frame_id
                         buttons = Int8()
-                        
+
                         streaming_data = imu_manager.getStreamingData(name)
                         idx = 0
-                        
+
                         for slot in imu_manager.streaming_slots[name]:
                                 #print name, slot
-                            
+
                             if slot == 'getTaredOrientationAsQuaternion':
-                                                            
+
                                 imuMsg.orientation.x = streaming_data[idx]
                                 imuMsg.orientation.y = streaming_data[idx+1]
                                 imuMsg.orientation.z = streaming_data[idx+2]
                                 imuMsg.orientation.w = streaming_data[idx+3]
-                                
+
                                 idx = idx + 4
-                                
+
                             elif slot == 'getNormalizedGyroRate':
-                        
+
                                 imuMsg.angular_velocity.x = streaming_data[idx]
                                 imuMsg.angular_velocity.y = streaming_data[idx+1]
                                 imuMsg.angular_velocity.z = streaming_data[idx+2]
-                                
+
                                 idx = idx + 3
-                                
+
                             elif slot == 'getCorrectedAccelerometerVector':
-                                
+
                                 imuMsg.linear_acceleration.x = -streaming_data[idx]
                                 imuMsg.linear_acceleration.y = -streaming_data[idx+1]
                                 imuMsg.linear_acceleration.z = -streaming_data[idx+2]
-                                
+
                                 idx = idx + 3
-                                
+
                             elif slot == 'getButtonState':
                                 if isinstance(streaming_data, tuple):
                                     buttons = streaming_data[idx]
@@ -120,30 +120,30 @@ def main():
                         imuMsg.header.stamp = timestamp
                         imuMsg.header.frame_id = frame_id
                         buttons = Int8()
-                        
+
                         streaming_data = imu_manager.devices[name].getStreamingBatch()
-                        
+
                         idx = 0
-                        
+
                         imuMsg.orientation.x = streaming_data[idx]
                         imuMsg.orientation.y = streaming_data[idx+1]
                         imuMsg.orientation.z = streaming_data[idx+2]
                         imuMsg.orientation.w = streaming_data[idx+3]
-                            
+
                         idx = idx + 4
-                            
+
                         imuMsg.angular_velocity.x = streaming_data[idx]
                         imuMsg.angular_velocity.y = streaming_data[idx+1]
                         imuMsg.angular_velocity.z = streaming_data[idx+2]
-                            
+
                         idx = idx + 3
-                            
+
                         imuMsg.linear_acceleration.x = -streaming_data[idx]
                         imuMsg.linear_acceleration.y = -streaming_data[idx+1]
                         imuMsg.linear_acceleration.z = -streaming_data[idx+2]
-                        
+
                         idx = idx + 3
-                            
+
                         buttons = streaming_data[idx]
 
                         # publish streamed data
@@ -154,7 +154,7 @@ def main():
 
         # sleep until it's time to work again
         rate.sleep()
-        
+
     # cleanup
     imu_manager.shutdown()
 

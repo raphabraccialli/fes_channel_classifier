@@ -1,16 +1,16 @@
 <launch>
-  <group ns="ema_tao">
-  <rosparam command="load" file="$(find ema_tao)/config/imu.yaml" ns="imu" />
+  <group ns="fes_channel_classifier">
+  <rosparam command="load" file="$(find fes_channel_classifier)/config/imu.yaml" ns="imu" />
 
-  <node name="imu" pkg="ema_tao" type="imu_node.py" output="screen" />
+  <node name="imu" pkg="fes_channel_classifier" type="imu_node.py" output="screen" />
 
   <!-- CODIGO RAPHAEL - THRESHOLD PARA ESTIMULAÇÃO-->
-  <node name="stateMachine" pkg="ema_tao" type="channelScanner.py" output="screen" />
+  <node name="stateMachine" pkg="fes_channel_classifier" type="channelScanner.py" output="screen" />
 
   </group>
 
-  <!-- launch utils 
-  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find ema_tao)/config/rviz/imu.rviz" output="log" respawn="true" respawn_delay="5"/>
+  <!-- launch utils
+  <node name="rviz" pkg="rviz" type="rviz" args="-d $(find fes_channel_classifier)/config/rviz/imu.rviz" output="log" respawn="true" respawn_delay="5"/>
   <node name="rqt_graph" pkg="rqt_graph" type="rqt_graph" output="log" respawn="true" respawn_delay="5"/> -->
   <node name="rqt_plot" pkg="rqt_plot" type="rqt_plot" output="log" respawn="true" respawn_delay="5"/>
 </launch>
