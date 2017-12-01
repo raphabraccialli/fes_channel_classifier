@@ -1,0 +1,10 @@
+#source em cada terminal
+source devel/setup.bash
+
+#liberar permissão da porta usb
+sudo adduser raphael dialout
+
+#tornar node executável
+chmod +x node.py
+
+#caso "roslaunch" não autocomplete o caminho, tentar antes "roscd"
