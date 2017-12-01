@@ -1,10 +1,11 @@
 <?xml version="1.0"?>
 <package>
-  <name>ema_tao</name>
+  <name>fes_channel_classifier</name>
   <version>0.1.0</version>
-  <description>The ema_tao package</description>
+  <description>The fes_channel_classifier package</description>
 
   <maintainer email="georgebrindeiro@lara.unb.br">George Brindeiro</maintainer>
+  <maintainer email="raphael.braccialli@gmail.com">Raphael Braccialli de Loyola</maintainer>
 
   <!-- One license tag required, multiple allowed, one license per tag -->
   <!-- Commonly used license strings: -->
@@ -12,10 +13,15 @@
   <license>TODO</license>
 
   <url type="website">https://github.com/lara-unb/ema-tao</url>
+  <url type="website">https://github.com/raphabraccialli/fes_channel_classifier</url>
 
 
   <author email="lucasfonseca27@gmail.com">Lucas Fonseca</author>
   <author email="stephany0303@hotmail.com">Stephany Ribeiro</author>
+  <author email="pedro.perruci@gmail.com">Pedro Perruci</author>
+  <author>Fernanda Amaral Melo</author>
+  <author>Frederico Rocha</author>
+
 
   <buildtool_depend>catkin</buildtool_depend>
   <build_depend>roscpp</build_depend>
