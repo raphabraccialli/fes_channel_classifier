@@ -20,7 +20,12 @@ import time
 
 
 class ChannelScanner:
-	''' Classe scanner de canais '''
+	'''
+		Classe scanner de canais.
+		Esta classe realiza um scanner dos canais mais interessantes para a eletroestimulacao.
+		Para tanto, monitora as informacoes de orientacao no plano sagital por meio do topico 'imu/angle'.
+		Os resultados do processo de scanner sao retornados pela funcao principal da classe: channelScanner em forma de dicionario.
+	'''
 	def __init__(self):
 			# inicia nó
 			rospy.init_node('channelScanner', anonymous = True)
@@ -34,7 +39,7 @@ class ChannelScanner:
 
 	def init_variables(self):
 		''' Iniciação das variaveis da classe '''
-		self.scannedChannels = [1, 2, 4]
+		self.scannedChannels = [1, 3, 5, 7]
 		self.stimMsg = Stimulator()
 		self.stimMsg.channel = [1]
 		self.stimMsg.mode = ['single']
@@ -45,9 +50,9 @@ class ChannelScanner:
 		self.channelCurrent = {}
 		for c in self.scannedChannels:
 			self.channelCurrent[c] = 0
-		self.angleThreshold = 30
-		self.min_current = 10
-		self.max_current = 22
+		self.angleThreshold = 10
+		self.min_current = 8
+		self.max_current = 20
 		self.current_step = 2
 		self.current = self.min_current
 
@@ -59,8 +64,8 @@ class ChannelScanner:
 
 	def stimulation_routine(self):
 		if self.counter == 0:
-			print('Estimulando canal ' 
-				  + str(self.scannedChannels[self.channelIndex]) 
+			print('Estimulando canal '
+				  + str(self.scannedChannels[self.channelIndex])
 				  + '\nEstimulation current: ' + str(self.current))
 		self.stimMsg.pulse_current = [self.current]
 		self.stimMsg.pulse_width = [500]
@@ -69,7 +74,7 @@ class ChannelScanner:
 
 		#print(self.counter)
 
-		if self.counter < 50:
+		if self.counter < 200:
 			if self.angle > self.maxAngle[self.channelIndex]:
 				self.maxAngle[self.channelIndex] = self.angle
 			self.counter += 1
@@ -79,17 +84,17 @@ class ChannelScanner:
 			self.pubStim.publish(self.stimMsg)
 
 			print('Pause')
-			rospy.sleep(2)
+			rospy.sleep(5)
 
 			self.counter = 0
 			self.channelIndex += 1
 
-	def angle_callback(self, data):		
+	def angle_callback(self, data):
 		self.get_angle(data)
 		self.plotAngle.publish(self.angle)
 
 	def channelScanner(self):
-		''' 
+		'''
 			Stimulate through all channels for currents between min and max.
 			When the maxAngle captured exeeds angleThreshold, save the channel and current value to the channelCurrent dict.
 			Repeat the scan until all channelCurrents are set (not 0) or max_current is archieved.
@@ -129,14 +134,13 @@ class ChannelScanner:
 					continue # continue to estimulate
 				else:
 					break # all channels are set
-				
+
 			rate.sleep()
 
 		# Zera canais de estimulação antes de desligar
 		self.stimMsg.pulse_current = [0]
 		self.stimMsg.pulse_width = [0]
 		self.pubStim.publish(self.stimMsg)
-		rospy.sleep(1)
 
 if __name__ == '__main__':
 	channel_scan = ChannelScanner()
