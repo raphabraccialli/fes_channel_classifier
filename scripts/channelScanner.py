@@ -29,12 +29,17 @@ class ChannelScanner:
 
 	def init_variables(self):
 		''' Iniciação das variaveis da classe '''
-		self.numOfChannels = 2
+		#self.numOfChannels = 2
+		self.usedChannels = [1, 3, 5, 7]
+		self.scannedChannels = []
+		for c in self.usedChannels:
+			self.scannedChannels.append(c)
+
 		self.stimMsg = Stimulator()
 		self.stimMsg.channel = [1]
 		self.stimMsg.mode = ['single']
 		self.counter = 0
-		self.channel = 1
+		self.channelIndex = 0
 		self.maxAngle = []
 		self.breaker = False
 
@@ -45,17 +50,17 @@ class ChannelScanner:
 		return self.angle
 
 	def stimulation_routine(self):
-		print('Estimulando canal ' + str(self.channel))
+		print('Estimulando canal ' + str(self.scannedChannels[self.channelIndex]))
 		self.stimMsg.pulse_current = [8]
 		self.stimMsg.pulse_width = [500]
-		self.stimMsg.channel = [self.channel]
+		self.stimMsg.channel = [self.scannedChannels[self.channelIndex]]
 		self.pubStim.publish(self.stimMsg)
 
 		print(self.counter)
 
 		if self.counter < 200:
-			if self.angle > self.maxAngle[self.channel-1]:
-						self.maxAngle[self.channel-1] = self.angle
+			if self.angle > self.maxAngle[self.channelIndex-1]:
+				self.maxAngle[self.channelIndex-1] = self.angle
 			self.counter += 1
 		else:
 			self.stimMsg.pulse_current = [0]
@@ -65,26 +70,28 @@ class ChannelScanner:
 			rospy.sleep(5)
 
 			self.counter = 0
-			self.channel += 1
+			self.channelIndex += 1
 
-	def angle_callback(self, data):
-		if self.channel <= self.numOfChannels:
-			self.get_angle(data)
-			self.plotAngle.publish(self.angle)
-
-			self.stimulation_routine()
-		else:
-			self.breaker = True
+	def angle_callback(self, data):		
+		self.get_angle(data)
+		self.plotAngle.publish(self.angle)
 
 	def channelScanner(self):
-		self.maxAngle = [0] * self.numOfChannels
+		self.maxAngle = [0] * len(self.scannedChannels)
 
 		#espera terminar calibragem
 		rospy.sleep(5)
+		rate = rospy.Rate(50)
 
-		while not self.breaker:
-			pass
+		while not rospy.is_shutdown():
+			if self.channelIndex < len(self.scannedChannels):
+				self.stimulation_routine()
+			else:
+				break
 
+			rate.sleep()
+
+		# Zera canais de estimulação antes de desligar
 		self.stimMsg.pulse_current = [0]
 		self.stimMsg.pulse_width = [0]
 		self.pubStim.publish(self.stimMsg)
