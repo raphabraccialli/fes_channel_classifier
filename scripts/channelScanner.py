@@ -17,6 +17,8 @@ import time
 class ChannelScanner:
 	''' Classe scanner de canais '''
 	def __init__(self):
+			# inicia nó
+			rospy.init_node('channelScanner', anonymous = True)
 			self.init_variables()
 			# Inscreve nos canais de pulibação de ângulos de cada sensor
 			rospy.Subscriber('imu/angle', Imu, callback = self.angle_callback, queue_size=1)
@@ -40,25 +42,25 @@ class ChannelScanner:
 		qx,qy,qz,qw = data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w
 		euler = transformations.euler_from_quaternion([qx, qy, qz, qw], axes='syxz')
 		self.angle = euler[0] * (180/pi)
-		return angle
+		return self.angle
 
 	def stimulation_routine(self):
-		print('Estimulando canal ' + str(channel))
+		print('Estimulando canal ' + str(self.channel))
 		self.stimMsg.pulse_current = [8]
 		self.stimMsg.pulse_width = [500]
-		self.stimMsg.channel = [channel]
-		self.pubStim.publish(stimMsg)
+		self.stimMsg.channel = [self.channel]
+		self.pubStim.publish(self.stimMsg)
 
 		print(self.counter)
 
 		if self.counter < 200:
-			if self.angle > self.maxAngle[channel-1]:
-						self.maxAngle[channel-1] = angle
+			if self.angle > self.maxAngle[self.channel-1]:
+						self.maxAngle[self.channel-1] = self.angle
 			self.counter += 1
 		else:
 			self.stimMsg.pulse_current = [0]
 			self.stimMsg.pulse_width = [0]
-			self.pubStim.publish(stimMsg)
+			self.pubStim.publish(self.stimMsg)
 
 			rospy.sleep(5)
 
@@ -66,7 +68,7 @@ class ChannelScanner:
 			self.channel += 1
 
 	def angle_callback(self, data):
-		if channel <= numOfChannels:
+		if self.channel <= self.numOfChannels:
 			self.get_angle(data)
 			self.plotAngle.publish(self.angle)
 
@@ -75,10 +77,7 @@ class ChannelScanner:
 			self.breaker = True
 
 	def channelScanner(self):
-		self.maxAngle = [0] * numOfChannels
-
-		# inicia nó
-		rospy.init_node('channelScanner', anonymous = True)
+		self.maxAngle = [0] * self.numOfChannels
 
 		#espera terminar calibragem
 		rospy.sleep(5)
@@ -88,7 +87,7 @@ class ChannelScanner:
 
 		self.stimMsg.pulse_current = [0]
 		self.stimMsg.pulse_width = [0]
-		self.pubStim.publish(stimMsg)
+		self.pubStim.publish(self.stimMsg)
 
 		print(self.maxAngle)
 
