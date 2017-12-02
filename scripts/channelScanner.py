@@ -74,7 +74,7 @@ class ChannelScanner:
 		else:
 			self.breaker = True
 
-	def channelScanner():
+	def channelScanner(self):
 		self.maxAngle = [0] * numOfChannels
 
 		# inicia nó
