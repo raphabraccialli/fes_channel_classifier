@@ -45,6 +45,11 @@ class ChannelScanner:
 		self.channelCurrent = {}
 		for c in self.scannedChannels:
 			self.channelCurrent[c] = 0
+		self.angleThreshold = 10
+		self.min_current = 8
+		self.max_current = 20
+		self.current_step = 2
+		self.current = self.min_current
 
 	def get_angle(self, data):
 		qx,qy,qz,qw = data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w
@@ -53,17 +58,18 @@ class ChannelScanner:
 		return self.angle
 
 	def stimulation_routine(self):
-		print('Estimulando canal ' + str(self.scannedChannels[self.channelIndex]))
+		if self.counter == 0:
+			print('Estimulando canal ' + str(self.scannedChannels[self.channelIndex]))
 		self.stimMsg.pulse_current = [8]
 		self.stimMsg.pulse_width = [500]
 		self.stimMsg.channel = [self.scannedChannels[self.channelIndex]]
 		self.pubStim.publish(self.stimMsg)
 
-		print(self.counter)
+		#print(self.counter)
 
 		if self.counter < 200:
-			if self.angle > self.maxAngle[self.channelIndex-1]:
-				self.maxAngle[self.channelIndex-1] = self.angle
+			if self.angle > self.maxAngle[self.channelIndex]:
+				self.maxAngle[self.channelIndex] = self.angle
 			self.counter += 1
 		else:
 			self.stimMsg.pulse_current = [0]
@@ -80,6 +86,11 @@ class ChannelScanner:
 		self.plotAngle.publish(self.angle)
 
 	def channelScanner(self):
+		''' 
+			Stimulate through all channels for currents between min and max.
+			When the maxAngle captured exeeds angleThreshold, save the channel and current value to the channelCurrent dict.
+			Repeat the scan until all channelCurrents are set (not 0) or max_current is archieved.
+		'''
 		self.maxAngle = [0] * len(self.scannedChannels)
 
 		#espera terminar calibragem
@@ -87,27 +98,39 @@ class ChannelScanner:
 		rate = rospy.Rate(50)
 
 		while not rospy.is_shutdown():
+			# Scan through all channels
 			if self.channelIndex < len(self.scannedChannels):
+				# if channel currrent value for that chanel is not set (==0), estimulate
 				if self.channelCurrent[self.scannedChannels[self.channelIndex]] == 0:
 					self.stimulation_routine()
 				else:
+					# channel current already set
 					self.channelIndex += 1
-			else:
-				break
+			else: # Evaluate scan results
+				# if any channel moved above angleTreshold, add its current to channelCurrent
+				for angIndex in range(len(self.maxAngle)):
+					if self.maxAngle[angIndex] > self.angleThreshold:
+						self.channelCurrent[self.scannedChannels[angIndex]] = 8;
+				# Print informations
+				print(self.maxAngle)
+				print(self.channelCurrent)
 
-			#else:
-			#	if 'passou por todos canais' | 'corrente acima do limite':
-			#			break
-
+				# Reset maxAngle
+				self.maxAngle = [0]*len(self.scannedChannels)
+				# Reset channel index
+				self.channelIndex = 0
+				# If any of the channels were not added to dictionary
+				if 0 in self.channelCurrent.values():
+					continue # continue to estimulate
+				else:
+					break # all channels are set
+				
 			rate.sleep()
 
 		# Zera canais de estimulação antes de desligar
 		self.stimMsg.pulse_current = [0]
 		self.stimMsg.pulse_width = [0]
 		self.pubStim.publish(self.stimMsg)
-
-		print(self.maxAngle)
-
 
 if __name__ == '__main__':
 	channel_scan = ChannelScanner()
