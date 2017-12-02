@@ -59,8 +59,10 @@ class ChannelScanner:
 
 	def stimulation_routine(self):
 		if self.counter == 0:
-			print('Estimulando canal ' + str(self.scannedChannels[self.channelIndex]))
-		self.stimMsg.pulse_current = [8]
+			print('Estimulando canal ' 
+				  + str(self.scannedChannels[self.channelIndex]) 
+				  + '\nEstimulation current: ' + str(self.current))
+		self.stimMsg.pulse_current = [self.current]
 		self.stimMsg.pulse_width = [500]
 		self.stimMsg.channel = [self.scannedChannels[self.channelIndex]]
 		self.pubStim.publish(self.stimMsg)
@@ -76,6 +78,7 @@ class ChannelScanner:
 			self.stimMsg.pulse_width = [0]
 			self.pubStim.publish(self.stimMsg)
 
+			print('Pause')
 			rospy.sleep(5)
 
 			self.counter = 0
@@ -110,7 +113,7 @@ class ChannelScanner:
 				# if any channel moved above angleTreshold, add its current to channelCurrent
 				for angIndex in range(len(self.maxAngle)):
 					if self.maxAngle[angIndex] > self.angleThreshold:
-						self.channelCurrent[self.scannedChannels[angIndex]] = 8;
+						self.channelCurrent[self.scannedChannels[angIndex]] = self.current;
 				# Print informations
 				print(self.maxAngle)
 				print(self.channelCurrent)
@@ -119,8 +122,10 @@ class ChannelScanner:
 				self.maxAngle = [0]*len(self.scannedChannels)
 				# Reset channel index
 				self.channelIndex = 0
+				#update current
+				self.current += self.current_step
 				# If any of the channels were not added to dictionary
-				if 0 in self.channelCurrent.values():
+				if 0 in self.channelCurrent.values() and self.current <= self.max_current:
 					continue # continue to estimulate
 				else:
 					break # all channels are set
