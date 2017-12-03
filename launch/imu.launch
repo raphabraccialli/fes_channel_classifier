@@ -4,8 +4,11 @@
 
   <node name="imu" pkg="fes_channel_classifier" type="imu_node.py" output="screen" />
 
-  <!-- CODIGO RAPHAEL - THRESHOLD PARA ESTIMULAÇÃO-->
-  <node name="stateMachine" pkg="fes_channel_classifier" type="channelScanner.py" output="screen" />
+  <!-- RODA NO DE ESTIMULACAO-->
+  <node name="channelScanner" pkg="fes_channel_classifier" type="channelScanner.py" output="screen" />
+
+  <!-- RODA NO DE PROTOCOLO-->
+  <node name="fes_protocol_1" pkg="fes_channel_classifier" type="fes_protocol_1.py" output="screen" />
 
   </group>
 

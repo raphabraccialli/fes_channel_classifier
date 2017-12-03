@@ -6,6 +6,7 @@ import rospy
 from sensor_msgs.msg import Imu
 from std_msgs.msg import Float64
 from std_msgs.msg import Int8
+from std_msgs.msg import Int8MultiArray
 from ema_common_msgs.msg import Stimulator
 
 # import utilities
@@ -17,7 +18,7 @@ import time
 ####### TO DO #######
 # - remover do imu.yaml streamming de dados que não esão sendo usados
 # - remover o publish do loop da main(). Está publicando acima da taxa de atualização das imus e distorcendo o gráfico
-
+# - desligar todos canais, em vez de um, tanto nos intervalos quanto no encerramento do programa
 
 class ChannelScanner:
 	'''
@@ -31,15 +32,17 @@ class ChannelScanner:
 			rospy.init_node('channelScanner', anonymous = True)
 			self.init_variables()
 			# Inscreve nos canais de pulibação de ângulos de cada sensor
-			rospy.Subscriber('imu/angle', Imu, callback = self.angle_callback, queue_size=1)
+			self.subImu = rospy.Subscriber('imu/angle', Imu, callback = self.angle_callback, queue_size=1)
 			# Publica ângulos  para mostrar em gráfico
 			self.plotAngle = rospy.Publisher('angle', Float64, queue_size = 10)
 			# Publica valores de eletroestimulação a serem lidos pelo estimulador
 			self.pubStim = rospy.Publisher('stimulator/ccl_update', Stimulator, queue_size=10)
+			# Publica lista final com canais de estimulação
+			self.pubReturn = rospy.Publisher('selectedChannels', Int8MultiArray, queue_size=10)
 
 	def init_variables(self):
 		''' Iniciação das variaveis da classe '''
-		self.scannedChannels = [1, 3, 5, 7]
+		self.scannedChannels = [1, 2, 4]
 		self.stimMsg = Stimulator()
 		self.stimMsg.channel = [1]
 		self.stimMsg.mode = ['single']
@@ -50,9 +53,9 @@ class ChannelScanner:
 		self.channelCurrent = {}
 		for c in self.scannedChannels:
 			self.channelCurrent[c] = 0
-		self.angleThreshold = 10
-		self.min_current = 8
-		self.max_current = 20
+		self.angleThreshold = 30
+		self.min_current = 6
+		self.max_current = 14
 		self.current_step = 2
 		self.current = self.min_current
 
@@ -74,7 +77,7 @@ class ChannelScanner:
 
 		#print(self.counter)
 
-		if self.counter < 200:
+		if self.counter < 50:
 			if self.angle > self.maxAngle[self.channelIndex]:
 				self.maxAngle[self.channelIndex] = self.angle
 			self.counter += 1
@@ -84,7 +87,8 @@ class ChannelScanner:
 			self.pubStim.publish(self.stimMsg)
 
 			print('Pause')
-			rospy.sleep(5)
+			print('\n')
+			rospy.sleep(2)
 
 			self.counter = 0
 			self.channelIndex += 1
@@ -119,9 +123,21 @@ class ChannelScanner:
 				for angIndex in range(len(self.maxAngle)):
 					if self.maxAngle[angIndex] > self.angleThreshold:
 						self.channelCurrent[self.scannedChannels[angIndex]] = self.current;
+
+				# asks and removes unconfortable channels
+				channelToRemove = int(input('Would you like to remove any channels? '))
+				if channelToRemove in self.channelCurrent.keys():
+					print('Removing channel ' + str(channelToRemove) + '...')
+					self.channelCurrent[channelToRemove] = -1
+					rospy.sleep(1)
+					print('Done')
+				
+				rospy.sleep(2)
+
 				# Print informations
 				print(self.maxAngle)
 				print(self.channelCurrent)
+				print('\n\n')
 
 				# Reset maxAngle
 				self.maxAngle = [0]*len(self.scannedChannels)
@@ -141,6 +157,17 @@ class ChannelScanner:
 		self.stimMsg.pulse_current = [0]
 		self.stimMsg.pulse_width = [0]
 		self.pubStim.publish(self.stimMsg)
+
+		returnList = [0] * 8
+		for c in self.channelCurrent.keys():
+			if self.channelCurrent[c] > 0:
+				returnList[c-1] = self.channelCurrent[c]
+
+		returnMsg = Int8MultiArray()
+		returnMsg.data = returnList
+		self.pubReturn.publish(returnMsg)
+
+		self.subImu.unregister()
 
 if __name__ == '__main__':
 	channel_scan = ChannelScanner()
