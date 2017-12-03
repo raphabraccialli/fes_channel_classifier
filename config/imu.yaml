@@ -40,7 +40,7 @@ autocalibrate: true
 # streaming_slots: {'pedal': ['getTaredOrientationAsQuaternion', 'getNormalizedGyroRate', 'getButtonState'], 'remote': ['getTaredOrientationAsQuaternion', 'getNormalizedGyroRate', 'getButtonState']}
 # wired_port: {'pedal': '/dev/ttyACM1', 'remote': '/dev/ttyACM2'}
 
-## 1 Wireless streaming test ##
+## 1 Wireless streaming test - channelScanner.py setup ##
 dev_names: ['pc', 'angle']
 dev_type: {'pc': 'DNG', 'angle': 'WL'}
 imu_mode: {'angle': 'wireless'}

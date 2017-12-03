@@ -1,8 +1,8 @@
 <launch>
-  <group ns="ema_tao">
-  <rosparam command="load" file="$(find ema_tao)/config/stimulator.yaml" ns="stimulator" />
+  <group ns="fes_channel_classifier">
+  <rosparam command="load" file="$(find fes_channel_classifier)/config/stimulator.yaml" ns="stimulator" />
 
-  <node name="stimulator" pkg="ema_tao" type="stimulator_node.py" output="screen" />
+  <node name="stimulator" pkg="fes_channel_classifier" type="stimulator_node.py" output="screen" />
 
   </group>
 </launch>

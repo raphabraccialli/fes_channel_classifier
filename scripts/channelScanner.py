@@ -34,7 +34,7 @@ class ChannelScanner:
 
 	def init_variables(self):
 		''' Iniciação das variaveis da classe '''
-		self.scannedChannels = [1, 3, 5, 7]
+		self.scannedChannels = [1, 2, 4]
 		self.stimMsg = Stimulator()
 		self.stimMsg.channel = [1]
 		self.stimMsg.mode = ['single']
@@ -45,9 +45,9 @@ class ChannelScanner:
 		self.channelCurrent = {}
 		for c in self.scannedChannels:
 			self.channelCurrent[c] = 0
-		self.angleThreshold = 10
-		self.min_current = 8
-		self.max_current = 20
+		self.angleThreshold = 30
+		self.min_current = 10
+		self.max_current = 22
 		self.current_step = 2
 		self.current = self.min_current
 
@@ -69,7 +69,7 @@ class ChannelScanner:
 
 		#print(self.counter)
 
-		if self.counter < 200:
+		if self.counter < 50:
 			if self.angle > self.maxAngle[self.channelIndex]:
 				self.maxAngle[self.channelIndex] = self.angle
 			self.counter += 1
@@ -79,7 +79,7 @@ class ChannelScanner:
 			self.pubStim.publish(self.stimMsg)
 
 			print('Pause')
-			rospy.sleep(5)
+			rospy.sleep(2)
 
 			self.counter = 0
 			self.channelIndex += 1
@@ -136,6 +136,7 @@ class ChannelScanner:
 		self.stimMsg.pulse_current = [0]
 		self.stimMsg.pulse_width = [0]
 		self.pubStim.publish(self.stimMsg)
+		rospy.sleep(1)
 
 if __name__ == '__main__':
 	channel_scan = ChannelScanner()
