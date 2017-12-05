@@ -14,9 +14,6 @@ from math import pi
 from tf import transformations
 import time
 
-#import channelScanner class
-from channelScanner import ChannelScanner
-
 
 class FESProtocol1:
 	'''
@@ -48,6 +45,7 @@ class FESProtocol1:
 		self.counter = 0
 		self.activeChannels = []
 		self.activeCurrents = []
+		self.activePulseWidths = []
 
 
 	def channel_input(self, data):
@@ -70,11 +68,15 @@ class FESProtocol1:
 		# Enables protocol to start
 		#self.start = True
 
+		print('\n')
+		self.add_min_channel()
 		while len(self.channelCurrent) > 0:
-			self.add_min_channel()
+			self.add_max_channel()
 		
 
 	def add_min_channel(self):
+		# adds channel of minimum current
+
 		# finds first occurence of minimum current
 		minCurrent = min(self.channelCurrent.values())
 		# finds it's index in the values list
@@ -86,6 +88,29 @@ class FESProtocol1:
 
 		self.activeChannels.append(channelOfMinCurrent)
 		self.activeCurrents.append(minCurrent)
+		self.activePulseWidths.append(500)
+
+		print('Channels to be added: ' + str(self.channelCurrent))
+		print('Active channels: ' + str(self.activeChannels))
+		print('Active currents: ' + str(self.activeCurrents))
+		print('\n')
+
+
+	def add_max_channel(self):
+		# adds channel of maximum current
+
+		# finds first occurence of maximum current
+		maxCurrent = max(self.channelCurrent.values())
+		# finds it's index in the values list
+		indexOfMaxCurrent = list(self.channelCurrent.values()).index(maxCurrent)
+		# with it's index, finds the key in the key list
+		channelOfMaxCurrent = list(self.channelCurrent.keys())[indexOfMaxCurrent]
+
+		self.channelCurrent.pop(channelOfMaxCurrent)
+
+		self.activeChannels.append(channelOfMaxCurrent)
+		self.activeCurrents.append(maxCurrent)
+		self.activePulseWidths.append(500)
 
 		print('Channels to be added: ' + str(self.channelCurrent))
 		print('Active channels: ' + str(self.activeChannels))
@@ -106,7 +131,7 @@ class FESProtocol1:
 		self.get_angle(data)
 		self.plotAngle.publish(self.angle)
 
-	def channelScanner(self):
+	def fes_protocol_1(self):
 		'''
 		'''
 
@@ -128,4 +153,4 @@ class FESProtocol1:
 
 if __name__ == '__main__':
 	fes_protocol = FESProtocol1()
-	fes_protocol.channelScanner()
+	fes_protocol.fes_protocol_1()
