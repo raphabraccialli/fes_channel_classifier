@@ -39,13 +39,22 @@ class FESProtocol1:
 
 	def init_variables(self):
 		''' Iniciação das variaveis da classe '''
+		self.stimMsg = Stimulator()
+		self.stimMsg.mode = ['single']
+
 		self.channelCurrent = {}
 		self.channelCurrentReference = []
 		self.start = False
 		self.counter = 0
+		self.totalCounter = 0
+
 		self.activeChannels = []
 		self.activeCurrents = []
 		self.activePulseWidths = []
+
+		self.maxAngle = 0
+
+		self.angleThreshold = 30
 
 
 	def channel_input(self, data):
@@ -64,13 +73,11 @@ class FESProtocol1:
 
 		# Prints channels as a dictionary
 		print('Protocol started with values: ' + str(self.channelCurrent))
+		print('\n')		
 		
 		# Enables protocol to start
-		#self.start = True
+		self.start = True
 
-		print('\n')
-		while len(self.channelCurrent) > 0:
-			self.add_min_channel()
 		
 
 	def add_min_channel(self):
@@ -134,7 +141,38 @@ class FESProtocol1:
 		return self.angle
 
 	def stimulation_routine(self):
-		pass
+		if self.counter == 0:
+			print('Estimulando canal '
+				  + str(self.activeChannels)
+				  + '\nEstimulation current: ' + str(self.activeCurrents))
+
+		self.stimMsg.pulse_current = [self.activeCurrents]
+		self.stimMsg.pulse_width = [500]
+		self.stimMsg.channel = [self.activeChannels]
+		self.pubStim.publish(self.stimMsg)
+
+		if self.counter < 50:
+			if self.angle > self.maxAngle:
+				self.maxAngle = self.angle
+			self.counter += 1
+		else:
+			self.stimMsg.pulse_current = [0]
+			self.stimMsg.pulse_width = [0]
+			self.pubStim.publish(self.stimMsg)
+
+			print('Pause')
+			print('\n')
+			rospy.sleep(2)
+
+			self.counter = 0
+
+			if self.maxAngle < self.angleThreshold:
+				self.add_min_channel()
+			else:
+				self.totalCounter += 1
+
+			self.maxAngle = 0
+			
 
 	def angle_callback(self, data):
 		self.get_angle(data)
@@ -150,13 +188,18 @@ class FESProtocol1:
 
 		while not rospy.is_shutdown():
 			if self.start:
-				pass
+				if len(self.channelCurrent) > 0:
+					stimulation_routine()
+				#self.add_min_channel()
 			rate.sleep()
 
 		# Zera canais de estimulação antes de desligar
-		#self.stimMsg.pulse_current = [0]
-		#self.stimMsg.pulse_width = [0]
-		#self.pubStim.publish(self.stimMsg)
+		self.stimMsg.pulse_current = [0]
+		self.stimMsg.pulse_width = [0]
+		self.pubStim.publish(self.stimMsg)
+
+		# Escreve na tela o numero de repeticoes
+		print('Foram realizadas ' + str(self.totalCounter) + ' repeticoes.')
 
 		rospy.sleep(1)
 
