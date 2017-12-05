@@ -69,9 +69,8 @@ class FESProtocol1:
 		#self.start = True
 
 		print('\n')
-		self.add_min_channel()
 		while len(self.channelCurrent) > 0:
-			self.add_max_channel()
+			self.add_min_channel()
 		
 
 	def add_min_channel(self):
@@ -86,13 +85,18 @@ class FESProtocol1:
 
 		self.channelCurrent.pop(channelOfMinCurrent)
 
-		self.activeChannels.append(channelOfMinCurrent)
-		self.activeCurrents.append(minCurrent)
-		self.activePulseWidths.append(500)
+		#self.activeChannels.append(channelOfMinCurrent)
+		#self.activeCurrents.append(minCurrent)
+		#self.activePulseWidths.append(500)
+
+		self.activeChannels = channelOfMinCurrent
+		self.activeCurrents = minCurrent
+		self.activePulseWidths = 500
 
 		print('Channels to be added: ' + str(self.channelCurrent))
 		print('Active channels: ' + str(self.activeChannels))
 		print('Active currents: ' + str(self.activeCurrents))
+		print('Active currents: ' + str(self.activePulseWidths))
 		print('\n')
 
 
@@ -108,13 +112,18 @@ class FESProtocol1:
 
 		self.channelCurrent.pop(channelOfMaxCurrent)
 
-		self.activeChannels.append(channelOfMaxCurrent)
-		self.activeCurrents.append(maxCurrent)
-		self.activePulseWidths.append(500)
+		#self.activeChannels.append(channelOfMaxCurrent)
+		#self.activeCurrents.append(maxCurrent)
+		#self.activePulseWidths.append(500)
+
+		self.activeChannels = channelOfMaxCurrent
+		self.activeCurrents = maxCurrent
+		self.activePulseWidths = 500
 
 		print('Channels to be added: ' + str(self.channelCurrent))
 		print('Active channels: ' + str(self.activeChannels))
 		print('Active currents: ' + str(self.activeCurrents))
+		print('Active currents: ' + str(self.activePulseWidths))
 		print('\n')
 
 		
