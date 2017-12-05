@@ -22,7 +22,6 @@ class FESProtocol1:
 	'''
 	'''
 	def __init__(self):
-			print('####################################### hello __init__')
 			# inicia nó
 			rospy.init_node('fes_protocol_1', anonymous = True)
 
@@ -42,16 +41,56 @@ class FESProtocol1:
 
 
 	def init_variables(self):
-		print('####################################### hello init_variables')
 		''' Iniciação das variaveis da classe '''
-		self.channelCurrent = []
+		self.channelCurrent = {}
+		self.channelCurrentReference = []
+		self.start = False
+		self.counter = 0
+		self.activeChannels = []
+		self.activeCurrents = []
 
 
 	def channel_input(self, data):
-		print('####################################### hello callback')
-		self.channelCurrent = data.data
-		print(self.channelCurrent)
+		# Unsubscribes from topic
 		self.subInput.unregister()
+
+		# Saves input for possible future reference
+		self.channelCurrentReference = data.data
+
+		# The recieved message is a list where the channel is accessed by the index, thus it shall not change.
+		# The following piece of code transforms it into dictionary, so it can ignore zeros (off channels) 
+		# and pop values without changing the index (channel) of the related currents.
+		for c in range(len(self.channelCurrentReference)):
+			if self.channelCurrentReference[c] > 0:
+				self.channelCurrent[c+1] = self.channelCurrentReference[c]
+
+		# Prints channels as a dictionary
+		print('Protocol started with values: ' + str(self.channelCurrent))
+		
+		# Enables protocol to start
+		#self.start = True
+
+		while len(self.channelCurrent) > 0:
+			self.add_min_channel()
+		
+
+	def add_min_channel(self):
+		# finds first occurence of minimum current
+		minCurrent = min(self.channelCurrent.values())
+		# finds it's index in the values list
+		indexOfMinCurrent = list(self.channelCurrent.values()).index(minCurrent)
+		# with it's index, finds the key in the key list
+		channelOfMinCurrent = list(self.channelCurrent.keys())[indexOfMinCurrent]
+
+		self.channelCurrent.pop(channelOfMinCurrent)
+
+		self.activeChannels.append(channelOfMinCurrent)
+		self.activeCurrents.append(minCurrent)
+
+		print('Channels to be added: ' + str(self.channelCurrent))
+		print('Active channels: ' + str(self.activeChannels))
+		print('Active currents: ' + str(self.activeCurrents))
+		print('\n')
 
 		
 	def get_angle(self, data):
@@ -76,6 +115,8 @@ class FESProtocol1:
 		rate = rospy.Rate(1)
 
 		while not rospy.is_shutdown():
+			if self.start:
+				pass
 			rate.sleep()
 
 		# Zera canais de estimulação antes de desligar
