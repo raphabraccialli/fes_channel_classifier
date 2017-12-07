@@ -48,13 +48,13 @@ class FESProtocol1:
 		self.counter = 0
 		self.totalCounter = 0
 
-		self.activeChannels = []
-		self.activeCurrents = []
-		self.activePulseWidths = []
+		self.activeChannels = 0
+		self.activeCurrents = 0
+		self.activePulseWidths = 0
 
 		self.maxAngle = 0
 
-		self.angleThreshold = 30
+		self.angleThreshold = 20
 
 
 	def channel_input(self, data):
@@ -72,9 +72,26 @@ class FESProtocol1:
 				self.channelCurrent[c+1] = self.channelCurrentReference[c]
 
 		# Prints channels as a dictionary
+		print('\n\n\n\n')
 		print('Protocol started with values: ' + str(self.channelCurrent))
-		print('\n')		
-		
+		print('\n')
+
+		#print('Starting in...')
+		#print('5')
+		#rospy.sleep(1)
+		#print('4')
+		#rospy.sleep(1)
+		#print('3')
+		#rospy.sleep(1)
+		#print('2')
+		#rospy.sleep(1)
+		#print('1')
+		#rospy.sleep(1)
+		#print('GO!')
+
+		# First channel added
+		self.add_min_channel()
+
 		# Enables protocol to start
 		self.start = True
 
@@ -82,6 +99,8 @@ class FESProtocol1:
 
 	def add_min_channel(self):
 		# adds channel of minimum current
+
+		print('Adding channel of minimum current')
 
 		# finds first occurence of minimum current
 		minCurrent = min(self.channelCurrent.values())
@@ -109,6 +128,8 @@ class FESProtocol1:
 
 	def add_max_channel(self):
 		# adds channel of maximum current
+
+		print('Adding channel of maximum current')
 
 		# finds first occurence of maximum current
 		maxCurrent = max(self.channelCurrent.values())
@@ -138,7 +159,6 @@ class FESProtocol1:
 		qx,qy,qz,qw = data.orientation.x, data.orientation.y, data.orientation.z, data.orientation.w
 		euler = transformations.euler_from_quaternion([qx, qy, qz, qw], axes='syxz')
 		self.angle = euler[0] * (180/pi)
-		return self.angle
 
 	def stimulation_routine(self):
 		if self.counter == 0:
@@ -160,19 +180,23 @@ class FESProtocol1:
 			self.stimMsg.pulse_width = [0]
 			self.pubStim.publish(self.stimMsg)
 
-			print('Pause')
-			print('\n')
-			rospy.sleep(2)
+			self.totalCounter += 1
 
-			self.counter = 0
+			print('Angulo Máximo: ' + str(self.maxAngle))
+			print('Número de repetições: ' + str(self.totalCounter))
+			print('\n')
 
 			if self.maxAngle < self.angleThreshold:
+				if len(self.channelCurrent) == 0:
+					self.start = False
+					return 0
 				self.add_min_channel()
-			else:
-				self.totalCounter += 1
 
 			self.maxAngle = 0
-			
+			self.counter = 0
+
+			rospy.sleep(2)
+
 
 	def angle_callback(self, data):
 		self.get_angle(data)
@@ -184,12 +208,12 @@ class FESProtocol1:
 
 		#espera terminar calibragem
 		rospy.sleep(5)
-		rate = rospy.Rate(1)
+		rate = rospy.Rate(50)
 
 		while not rospy.is_shutdown():
 			if self.start:
-				if len(self.channelCurrent) > 0:
-					stimulation_routine()
+				if len(self.channelCurrent) >= 0:
+					self.stimulation_routine()
 				#self.add_min_channel()
 			rate.sleep()
 

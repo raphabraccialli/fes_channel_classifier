@@ -52,7 +52,7 @@ streaming_delay: 0
 streaming_slots: {'angle': ['getTaredOrientationAsQuaternion']}
 wired_port: {'pc': '/dev/ttyACM0'}
 wireless_dng: {'angle': 'pc'}
-wireless_id: {'angle': 1}
+wireless_id: {'angle': 2}
 
 ## 2 Wireless streaming test - stateMachineSingleLeg.py setup ##
 #dev_names: ['pc', 'lowerLeg', 'upperLeg']

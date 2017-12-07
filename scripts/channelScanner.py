@@ -42,7 +42,7 @@ class ChannelScanner:
 
 	def init_variables(self):
 		''' Iniciação das variaveis da classe '''
-		self.scannedChannels = [1, 2, 4]
+		self.scannedChannels = [1, 2, 3] # escolher canais nessa variavel
 		self.stimMsg = Stimulator()
 		self.stimMsg.channel = [1]
 		self.stimMsg.mode = ['single']
@@ -54,8 +54,7 @@ class ChannelScanner:
 		for c in self.scannedChannels:
 			self.channelCurrent[c] = 0
 		self.angleThreshold = 30
-		self.min_current = 6
-		self.max_current = 14
+		self.min_current = 10
 		self.current_step = 2
 		self.current = self.min_current
 
@@ -101,7 +100,7 @@ class ChannelScanner:
 		'''
 			Stimulate through all channels for currents between min and max.
 			When the maxAngle captured exeeds angleThreshold, save the channel and current value to the channelCurrent dict.
-			Repeat the scan until all channelCurrents are set (not 0) or max_current is archieved.
+			Repeat the scan until all channelCurrents are set (not 0).
 		'''
 		self.maxAngle = [0] * len(self.scannedChannels)
 
@@ -146,7 +145,7 @@ class ChannelScanner:
 				#update current
 				self.current += self.current_step
 				# If any of the channels were not added to dictionary
-				if 0 in self.channelCurrent.values() and self.current <= self.max_current:
+				if 0 in self.channelCurrent.values():
 					continue # continue to estimulate
 				else:
 					break # all channels are set
